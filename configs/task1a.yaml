@@ -35,6 +35,8 @@ scoring:
 
   heading_score_threshold: 6
   min_rules_fired: 3
+  very_short_char_threshold: 20
+  very_short_line_score: 1
 
 levels:
   h1:

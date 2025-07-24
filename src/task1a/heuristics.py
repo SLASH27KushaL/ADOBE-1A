@@ -111,41 +111,57 @@ def detect_headings(
         if row.font_size_ratio < 1.0:
             score += sc.rel_font_below_body_penalty
 
+        # 1) Relative font size
         if row.font_size_ratio > sc.rel_font_size_threshold:
             score += sc.rel_font_size_score; rules_fired += 1
 
+        # 2) Bold
         if row.is_bold_majority:
             score += sc.is_bold_score; rules_fired += 1
 
+        # 3) Top-of-page
         if row.page_top_distance <= sc.top_pct_threshold:
             score += sc.top_pct_score; rules_fired += 1
 
+        # 4) Vertical gap (above)
         if row.vertical_gap > (sc.vertical_gap_multiplier * row.line_font_size):
             score += sc.vertical_gap_score; rules_fired += 1
 
+        # 5) Short-ish line (<= max_heading_chars)
         if row.char_count <= filt.max_heading_chars:
             score += sc.short_line_score; rules_fired += 1
 
+        # NEW 5b) Very short line (<= very_short_char_threshold)
+        if row.char_count <= sc.very_short_char_threshold:
+            score += sc.very_short_line_score; rules_fired += 1
+
+        # 6) Numeric prefix
         if row.has_numeric_prefix:
             score += sc.has_numeric_prefix_score; rules_fired += 1
 
+        # 7) Ends with colon
         if row.ends_with_colon:
             score += sc.ends_with_colon_score; rules_fired += 1
 
+        # 8) Title case ratio
         if row.title_case_ratio >= 0.6:
             score += sc.title_case_score; rules_fired += 1
 
+        # 9) Uppercase ratio
         if row.uppercase_ratio >= 0.6 and row.char_count <= 60:
             score += sc.uppercase_ratio_score; rules_fired += 1
 
+        # 10) Ends with period (penalize)
         if row.ends_with_period and not row.has_numeric_prefix:
             score += sc.ends_with_period_penalty
 
+        # 11) Exact whole-line repetition (doc)
         if rep_cfg.enable and row.word_count <= rep_cfg.max_words:
             if is_repeated_exact(row.text, repeated_titles):
                 score += rep_cfg.boost_score
                 rules_fired += 1
 
+        # 12) Block (page) repetition bonus
         if rep_cfg.enable and rep_cfg.block_scope == "page":
             t_norm = short_norm_texts[i]
             if t_norm and row.word_count <= rep_cfg.max_words:
@@ -153,6 +169,7 @@ def detect_headings(
                     score += rep_cfg.block_bonus
                     rules_fired += 1
 
+        # 13) Spatial isolation
         if cfg.spatial.enable:
             above_ok = (row.gap_above_z >= sp.z_above_min)
             below_ok = (row.gap_below_z >= sp.z_below_min)
@@ -163,19 +180,22 @@ def detect_headings(
             elif above_ok or below_ok:
                 score += sp.one_side_bonus; rules_fired += 1
 
+        # 14) Context bullet-block lookahead
         if i in context_bonus_indices:
             score += ctx.bullet_block_bonus
             rules_fired += 1
 
+        # 15) Recipe back-link force
         if i in recipe_forced_indices:
             need = max(0, sc.heading_score_threshold - score)
             score += need + 1
             rules_fired += 1
 
+        # Bullet-like discount if weak
         if bullet_flags[i] and score < (sc.heading_score_threshold + 1):
             score -= 1
 
-        # *** FIXED: use kw.max_chars, not kw.max_heading_chars ***
+        # Keyword tie-breaker (FIXED: kw.max_chars)
         if kw.enabled and row.char_count <= kw.max_chars:
             txt_norm = (row.text or "").strip().lower()
             in_frontmatter = (row.page_num1 <= kw.force_h1_max_page) if kw.frontmatter_only else True

@@ -47,6 +47,8 @@ class ScoringConfig:
     ends_with_period_penalty: int = -1
 
     rel_font_below_body_penalty: int = -2  # NEW
+    very_short_char_threshold: int = 20
+    very_short_line_score: int = 1
 
     semantic_boost_enabled: bool = False
     semantic_boost_score: int = 2
