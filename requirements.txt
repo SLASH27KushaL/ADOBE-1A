@@ -1,0 +1,4 @@
+# requirements.txt
+
+PyMuPDF==1.24.8     # fitz
+PyYAML==6.0.1
