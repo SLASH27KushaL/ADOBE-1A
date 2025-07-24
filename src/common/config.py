@@ -46,6 +46,8 @@ class ScoringConfig:
     uppercase_ratio_score: int = 1
     ends_with_period_penalty: int = -1
 
+    rel_font_below_body_penalty: int = -2  # NEW
+
     semantic_boost_enabled: bool = False
     semantic_boost_score: int = 2
     semantic_sim_threshold: float = 0.5
@@ -116,6 +118,10 @@ class RepetitionConfig:
     min_occurrences: int = 3
     max_words: int = 8
     boost_score: int = 2
+    # NEW block scope repetition
+    min_occurrences_block: int = 2
+    block_scope: str = "page"
+    block_bonus: int = 2
 
 @dataclass
 class SpatialConfig:
@@ -126,6 +132,22 @@ class SpatialConfig:
     both_sides_bonus: int = 2
     one_side_bonus: int = 1
     first_line_on_page_ignore_above: bool = True
+
+@dataclass
+class ContextConfig:
+    enable: bool = True
+    k_lookahead: int = 5
+    min_bullets: int = 2
+    bullet_block_bonus: int = 2
+
+@dataclass
+class RecipeConfig:
+    enable: bool = True
+    back_look_lines: int = 8
+    labels: List[str] = field(default_factory=lambda: ["ingredients:", "instructions:", "method:", "directions:"])
+    promote_level: str = "H2"
+    min_title_words: int = 1
+    max_title_words: int = 6
 
 @dataclass
 class Task1AConfig:
@@ -142,6 +164,8 @@ class Task1AConfig:
     promotion: PromotionConfig = field(default_factory=PromotionConfig)
     repetition: RepetitionConfig = field(default_factory=RepetitionConfig)
     spatial: SpatialConfig = field(default_factory=SpatialConfig)
+    context: ContextConfig = field(default_factory=ContextConfig)
+    recipe: RecipeConfig = field(default_factory=RecipeConfig)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -165,6 +189,11 @@ class Task1AConfig:
             "promotion": self.promotion.__dict__,
             "repetition": self.repetition.__dict__,
             "spatial": self.spatial.__dict__,
+            "context": self.context.__dict__,
+            "recipe": {
+                **self.recipe.__dict__,
+                "labels": list(self.recipe.labels),
+            },
         }
 
 # -------------------------
@@ -236,6 +265,9 @@ def load_config(path: Path | str) -> Task1AConfig:
         min_occurrences=rep_data.get("min_occurrences", 3),
         max_words=rep_data.get("max_words", 8),
         boost_score=rep_data.get("boost_score", 2),
+        min_occurrences_block=rep_data.get("min_occurrences_block", 2),
+        block_scope=rep_data.get("block_scope", "page"),
+        block_bonus=rep_data.get("block_bonus", 2),
     )
 
     sp_data = data.get("spatial", {})
@@ -247,6 +279,24 @@ def load_config(path: Path | str) -> Task1AConfig:
         both_sides_bonus=sp_data.get("both_sides_bonus", 2),
         one_side_bonus=sp_data.get("one_side_bonus", 1),
         first_line_on_page_ignore_above=sp_data.get("first_line_on_page_ignore_above", True),
+    )
+
+    ctx_data = data.get("context", {})
+    context = ContextConfig(
+        enable=ctx_data.get("enable", True),
+        k_lookahead=ctx_data.get("k_lookahead", 5),
+        min_bullets=ctx_data.get("min_bullets", 2),
+        bullet_block_bonus=ctx_data.get("bullet_block_bonus", 2),
+    )
+
+    rec_data = data.get("recipe", {})
+    recipe = RecipeConfig(
+        enable=rec_data.get("enable", True),
+        back_look_lines=rec_data.get("back_look_lines", 8),
+        labels=rec_data.get("labels", ["ingredients:", "instructions:", "method:", "directions:"]),
+        promote_level=rec_data.get("promote_level", "H2"),
+        min_title_words=rec_data.get("min_title_words", 1),
+        max_title_words=rec_data.get("max_title_words", 6),
     )
 
     return Task1AConfig(
@@ -263,4 +313,6 @@ def load_config(path: Path | str) -> Task1AConfig:
         promotion=promotion,
         repetition=repetition,
         spatial=spatial,
+        context=context,
+        recipe=recipe,
     )

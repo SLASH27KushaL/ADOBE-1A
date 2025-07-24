@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, Tuple, Set
+from typing import List, Tuple, Set, Dict
 import re
+from collections import defaultdict, Counter
 
 from src.common.config import Task1AConfig
 from src.task1a.feature_extractor import FeatureRow
@@ -46,83 +47,135 @@ def detect_headings(
     kw = cfg.keywords
     rep_cfg = cfg.repetition
     sp = cfg.spatial
+    ctx = cfg.context
+    rec = cfg.recipe
+
     repeated_titles = repeated_titles or set()
 
-    out: List[HeadingCandidate] = []
+    rows = sorted(feature_rows, key=lambda r: (r.page_index0, r.y_position))
+    bullet_flags = [is_bullet_like(r.text) for r in rows]
     kw_set = set(k.lower().strip() for k in kw.list) if kw.enabled else set()
 
-    for row in feature_rows:
+    # Page-level repetition
+    page_counts: Dict[int, Counter] = defaultdict(Counter)
+    short_norm_texts: List[str] = []
+    for r in rows:
+        t_norm = norm_text(r.text)
+        short_norm_texts.append(t_norm)
+        if r.word_count > 0 and r.word_count <= rep_cfg.max_words and t_norm:
+            page_counts[r.page_index0][t_norm] += 1
+
+    # Recipe back-link
+    recipe_forced_indices: Set[int] = set()
+    if rec.enable:
+        labels = set(l.lower() for l in rec.labels)
+        for i, r in enumerate(rows):
+            t = (r.text or "").strip().lower()
+            if t in labels:
+                back = max(0, i - rec.back_look_lines)
+                for j in range(i - 1, back - 1, -1):
+                    rj = rows[j]
+                    tj = (rj.text or "").strip()
+                    w = rj.word_count
+                    if w >= rec.min_title_words and w <= rec.max_title_words:
+                        if not tj.endswith(":") and not is_bullet_like(tj):
+                            recipe_forced_indices.add(j)
+                            break
+
+    # Context bullet-block
+    context_bonus_indices: Set[int] = set()
+    if ctx.enable:
+        k = ctx.k_lookahead
+        for i, r in enumerate(rows):
+            if r.word_count == 0 or r.word_count > 12:
+                continue
+            limit = min(len(rows), i + 1 + k)
+            bullets = 0
+            for j in range(i + 1, limit):
+                if rows[j].page_index0 != r.page_index0:
+                    break
+                if bullet_flags[j]:
+                    bullets += 1
+                if rows[j].word_count > 25:
+                    break
+            if bullets >= ctx.min_bullets:
+                context_bonus_indices.add(i)
+
+    out: List[HeadingCandidate] = []
+
+    for i, row in enumerate(rows):
         score = 0
         rules_fired = 0
 
-        is_bullet_like = bool(BULLET_RE.match(row.text or "")) or (
-            (row.text or "").strip().endswith(".") and not row.has_numeric_prefix
-        )
+        # penalty if smaller than body font
+        if row.font_size_ratio < 1.0:
+            score += sc.rel_font_below_body_penalty
 
-        # 1) Relative font size
         if row.font_size_ratio > sc.rel_font_size_threshold:
             score += sc.rel_font_size_score; rules_fired += 1
 
-        # 2) Bold
         if row.is_bold_majority:
             score += sc.is_bold_score; rules_fired += 1
 
-        # 3) Top-of-page
         if row.page_top_distance <= sc.top_pct_threshold:
             score += sc.top_pct_score; rules_fired += 1
 
-        # 4) Vertical gap (above)
         if row.vertical_gap > (sc.vertical_gap_multiplier * row.line_font_size):
             score += sc.vertical_gap_score; rules_fired += 1
 
-        # 5) Short-ish line
         if row.char_count <= filt.max_heading_chars:
             score += sc.short_line_score; rules_fired += 1
 
-        # 6) Numeric prefix
         if row.has_numeric_prefix:
             score += sc.has_numeric_prefix_score; rules_fired += 1
 
-        # 7) Ends with colon
         if row.ends_with_colon:
             score += sc.ends_with_colon_score; rules_fired += 1
 
-        # 8) Title case ratio
         if row.title_case_ratio >= 0.6:
             score += sc.title_case_score; rules_fired += 1
 
-        # 9) Uppercase ratio
         if row.uppercase_ratio >= 0.6 and row.char_count <= 60:
             score += sc.uppercase_ratio_score; rules_fired += 1
 
-        # 10) Ends with period (penalize)
         if row.ends_with_period and not row.has_numeric_prefix:
             score += sc.ends_with_period_penalty
 
-        # 11) Exact whole-line repetition boost
         if rep_cfg.enable and row.word_count <= rep_cfg.max_words:
             if is_repeated_exact(row.text, repeated_titles):
                 score += rep_cfg.boost_score
                 rules_fired += 1
 
-        # 12) Spatial isolation bonus
-        if sp.enable:
+        if rep_cfg.enable and rep_cfg.block_scope == "page":
+            t_norm = short_norm_texts[i]
+            if t_norm and row.word_count <= rep_cfg.max_words:
+                if page_counts[row.page_index0][t_norm] >= rep_cfg.min_occurrences_block:
+                    score += rep_cfg.block_bonus
+                    rules_fired += 1
+
+        if cfg.spatial.enable:
             above_ok = (row.gap_above_z >= sp.z_above_min)
             below_ok = (row.gap_below_z >= sp.z_below_min)
             if sp.first_line_on_page_ignore_above and row.vertical_gap == row.y_position:
-                # This is the first line on page: ignore above test
                 above_ok = False
             if above_ok and below_ok:
-                score += sp.both_sides_bonus
-                rules_fired += 1
+                score += sp.both_sides_bonus; rules_fired += 1
             elif above_ok or below_ok:
-                score += sp.one_side_bonus
-                rules_fired += 1
+                score += sp.one_side_bonus; rules_fired += 1
 
-        if is_bullet_like and score < (sc.heading_score_threshold + 1):
+        if i in context_bonus_indices:
+            score += ctx.bullet_block_bonus
+            rules_fired += 1
+
+        if i in recipe_forced_indices:
+            need = max(0, sc.heading_score_threshold - score)
+            score += need + 1
+            rules_fired += 1
+
+        if bullet_flags[i] and score < (sc.heading_score_threshold + 1):
             score -= 1
 
-        # keyword tie-breaker
+        # *** FIXED: use kw.max_chars, not kw.max_heading_chars ***
         if kw.enabled and row.char_count <= kw.max_chars:
             txt_norm = (row.text or "").strip().lower()
             in_frontmatter = (row.page_num1 <= kw.force_h1_max_page) if kw.frontmatter_only else True
@@ -135,6 +188,7 @@ def detect_headings(
             (score >= sc.heading_score_threshold)
             or (rules_fired >= sc.min_rules_fired and score >= (sc.heading_score_threshold - 1))
             or force_pick
+            or (i in recipe_forced_indices)
         )
 
         if accept:
@@ -162,3 +216,14 @@ def detect_headings(
             ))
 
     return out
+
+def is_bullet_like(text: str | None) -> bool:
+    if not text:
+        return False
+    t = text.strip()
+    if BULLET_RE.match(t):
+        return True
+    return False
+
+def norm_text(text: str | None) -> str:
+    return " ".join((text or "").strip().split()).lower()

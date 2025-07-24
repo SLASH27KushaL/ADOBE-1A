@@ -30,6 +30,9 @@ scoring:
   uppercase_ratio_score: 1
   ends_with_period_penalty: -1
 
+  # NEW: penalize if the line is actually smaller than the body / median size
+  rel_font_below_body_penalty: -2
+
   heading_score_threshold: 6
   min_rules_fired: 3
 
@@ -83,7 +86,7 @@ hierarchy:
 
 promotion:
   enable: true
-  allow_h1: false      # <— do NOT ever upgrade to H1 here
+  allow_h1: false      # never promote to H1 here
   h2_q: 0.85
 
 repetition:
@@ -91,6 +94,10 @@ repetition:
   min_occurrences: 3
   max_words: 8
   boost_score: 2
+  # NEW - per-page / per-block repetition
+  min_occurrences_block: 2
+  block_scope: "page"     # ("page" or future "h1")
+  block_bonus: 2
 
 spatial:
   enable: true
@@ -100,3 +107,19 @@ spatial:
   both_sides_bonus: 2
   one_side_bonus: 1
   first_line_on_page_ignore_above: true
+
+# NEW: context look-ahead bonuses (bullet blocks)
+context:
+  enable: true
+  k_lookahead: 5
+  min_bullets: 2
+  bullet_block_bonus: 2
+
+# NEW: recipe-style back-link detector
+recipe:
+  enable: true
+  back_look_lines: 8
+  labels: ["ingredients:", "instructions:", "method:", "directions:"]
+  promote_level: "H2"            # used later if you want to force-level; currently we just boost score
+  min_title_words: 1
+  max_title_words: 6
