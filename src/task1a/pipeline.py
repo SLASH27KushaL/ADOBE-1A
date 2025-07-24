@@ -6,6 +6,8 @@ from typing import Any, Dict, List
 
 from src.common.config import Task1AConfig
 from src.common import pdf_reader as pr
+from src.task1a import semantic_filter
+
 
 from src.task1a import (
     tagged_extractor,
@@ -55,6 +57,8 @@ def run_pipeline(pdf_path: Path, cfg: Task1AConfig) -> Dict[str, Any]:
             cfg=cfg,
             repeated_titles=repeated_titles,
         )
+        heading_candidates = semantic_filter.filter_candidates(heading_candidates, cfg)
+
 
         labeled_headings = level_classifier.assign_levels(
             heading_candidates=heading_candidates,

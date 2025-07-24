@@ -22,6 +22,8 @@ class FilteringConfig:
     min_core_chars: int = 3
     max_heading_chars: int = 100
     drop_first_page_headings_from_outline: bool = False
+    # (optional) when you want to drop tiny 1-word shards
+    min_chars_single_word: int = 4
 
 @dataclass
 class BodyProfileConfig:
@@ -46,7 +48,9 @@ class ScoringConfig:
     uppercase_ratio_score: int = 1
     ends_with_period_penalty: int = -1
 
-    rel_font_below_body_penalty: int = -2  # NEW
+    rel_font_below_body_penalty: int = -2
+
+    # very short heading boost
     very_short_char_threshold: int = 20
     very_short_line_score: int = 1
 
@@ -120,7 +124,6 @@ class RepetitionConfig:
     min_occurrences: int = 3
     max_words: int = 8
     boost_score: int = 2
-    # NEW block scope repetition
     min_occurrences_block: int = 2
     block_scope: str = "page"
     block_bonus: int = 2
@@ -151,6 +154,18 @@ class RecipeConfig:
     min_title_words: int = 1
     max_title_words: int = 6
 
+# ---- NEW ----
+@dataclass
+class SemanticFilterConfig:
+    enable: bool = True
+    use_spacy: bool = True
+    model: str = "en_core_web_sm"
+    max_chars: int = 120
+    min_alpha_ratio: float = 0.5
+    accept_all_caps_minlen: int = 2
+    require_content_pos: bool = True
+    content_pos: List[str] = field(default_factory=lambda: ["NOUN", "PROPN", "VERB", "ADJ"])
+
 @dataclass
 class Task1AConfig:
     timing: TimingConfig
@@ -168,6 +183,7 @@ class Task1AConfig:
     spatial: SpatialConfig = field(default_factory=SpatialConfig)
     context: ContextConfig = field(default_factory=ContextConfig)
     recipe: RecipeConfig = field(default_factory=RecipeConfig)
+    semantic_filter: SemanticFilterConfig = field(default_factory=SemanticFilterConfig)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -195,6 +211,10 @@ class Task1AConfig:
             "recipe": {
                 **self.recipe.__dict__,
                 "labels": list(self.recipe.labels),
+            },
+            "semantic_filter": {
+                **self.semantic_filter.__dict__,
+                "content_pos": list(self.semantic_filter.content_pos),
             },
         }
 
@@ -301,6 +321,18 @@ def load_config(path: Path | str) -> Task1AConfig:
         max_title_words=rec_data.get("max_title_words", 6),
     )
 
+    sf_data = data.get("semantic_filter", {})
+    semantic_filter = SemanticFilterConfig(
+        enable=sf_data.get("enable", True),
+        use_spacy=sf_data.get("use_spacy", True),
+        model=sf_data.get("model", "en_core_web_sm"),
+        max_chars=sf_data.get("max_chars", 120),
+        min_alpha_ratio=sf_data.get("min_alpha_ratio", 0.5),
+        accept_all_caps_minlen=sf_data.get("accept_all_caps_minlen", 2),
+        require_content_pos=sf_data.get("require_content_pos", True),
+        content_pos=sf_data.get("content_pos", ["NOUN", "PROPN", "VERB", "ADJ"]),
+    )
+
     return Task1AConfig(
         timing=timing,
         tagged=tagged,
@@ -317,4 +349,5 @@ def load_config(path: Path | str) -> Task1AConfig:
         spatial=spatial,
         context=context,
         recipe=recipe,
+        semantic_filter=semantic_filter,
     )

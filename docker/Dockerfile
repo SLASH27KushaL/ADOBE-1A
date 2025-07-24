@@ -10,6 +10,10 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Download the spaCy model at build time so runtime is fully offline
+RUN python -m spacy download en_core_web_sm
+
+
 # Copy source + configs + entrypoint
 COPY src/ src/
 COPY configs/ configs/

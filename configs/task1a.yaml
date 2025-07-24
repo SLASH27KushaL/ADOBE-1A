@@ -125,3 +125,13 @@ recipe:
   promote_level: "H2"            # used later if you want to force-level; currently we just boost score
   min_title_words: 1
   max_title_words: 6
+
+semantic_filter:
+  enable: true
+  use_spacy: true
+  model: "en_core_web_sm"
+  max_chars: 120            # only run spaCy for reasonably short headings
+  min_alpha_ratio: 0.5      # at least 50% alphabetic chars
+  accept_all_caps_minlen: 2 # accept acronyms like "RFP", "ODL"
+  require_content_pos: true # require at least one NOUN / PROPN / VERB / ADJ
+  content_pos: ["NOUN", "PROPN", "VERB", "ADJ"]
