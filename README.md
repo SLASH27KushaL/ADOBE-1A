@@ -67,5 +67,14 @@ The extraction logic can be fine-tuned by modifying the configuration file locat
 
 **Project Structure**
 ---------------------
-
-├── configs/│   └── task1a.yaml     # Main configuration for the pipeline├── docker/│   ├── Dockerfile      # Instructions to build the Docker image│   └── entrypoint.sh   # Script that runs the Python application├── input/              # Place your source PDFs here├── output/             # Extracted JSON results will be saved here├── src/│   ├── common/         # Shared utilities for PDF reading and config loading│   └── task1a/         # Core logic for the extraction pipeline└── requirements.txt    # Python dependencies
+├── configs/
+│   └── task1a.yaml     # Main configuration for the pipeline
+├── docker/
+│   ├── Dockerfile      # Instructions to build the Docker image
+│   └── entrypoint.sh   # Script that runs the Python application
+├── input/              # Place your source PDFs here
+├── output/             # Extracted JSON results will be saved here
+├── src/
+│   ├── common/         # Shared utilities for PDF reading and config loading
+│   └── task1a/         # Core logic for the extraction pipeline
+└── requirements.txt    # Python dependencies
