@@ -66,7 +66,6 @@ The script will process each PDF found in the input directory and create a corre
 The extraction logic can be fine-tuned by modifying the configuration file located at configs/task1a.yaml. This file contains various thresholds and weights for scoring headings, defining levels, and enabling or disabling different processing steps.
 
 **Project Structure**
----------------------
 ├── configs/
 │   └── task1a.yaml     # Main configuration for the pipeline
 ├── docker/
