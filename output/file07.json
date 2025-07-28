@@ -1,5 +1,5 @@
 {
-  "title": "Nice: The Jewel of the French Riviera",
+  "title": "Comprehensive Guide to Major Cities in the South of France",
   "outline": [
     {
       "level": "H1",
@@ -18,47 +18,12 @@
     },
     {
       "level": "H2",
-      "text": "Travel Tips",
-      "page": 1
-    },
-    {
-      "level": "H1",
       "text": "Marseille: The Oldest City in France",
       "page": 2
     },
     {
       "level": "H2",
-      "text": "History",
-      "page": 2
-    },
-    {
-      "level": "H2",
-      "text": "Key Attractions",
-      "page": 2
-    },
-    {
-      "level": "H2",
-      "text": "Cultural Highlights",
-      "page": 2
-    },
-    {
-      "level": "H1",
       "text": "Nice: The Jewel of the French Riviera",
-      "page": 4
-    },
-    {
-      "level": "H2",
-      "text": "History",
-      "page": 4
-    },
-    {
-      "level": "H2",
-      "text": "Key Attractions",
-      "page": 4
-    },
-    {
-      "level": "H2",
-      "text": "Cultural Highlights",
       "page": 4
     },
     {
@@ -68,57 +33,12 @@
     },
     {
       "level": "H2",
-      "text": "History",
-      "page": 6
-    },
-    {
-      "level": "H2",
-      "text": "Key Attractions",
-      "page": 6
-    },
-    {
-      "level": "H2",
-      "text": "Cultural Highlights",
-      "page": 6
-    },
-    {
-      "level": "H1",
       "text": "Aix-en-Provence: A City of Art and Culture",
       "page": 7
     },
     {
       "level": "H2",
-      "text": "History",
-      "page": 7
-    },
-    {
-      "level": "H2",
-      "text": "Key Attractions",
-      "page": 7
-    },
-    {
-      "level": "H2",
-      "text": "Cultural Highlights",
-      "page": 7
-    },
-    {
-      "level": "H2",
       "text": "Toulouse: The Pink City",
-      "page": 8
-    },
-    {
-      "level": "H2",
-      "text": "History",
-      "page": 8
-    },
-    {
-      "level": "H2",
-      "text": "Key Attractions",
-      "page": 8
-    },
-    {
-      "level": "H2",
-      "text": "Cultural Highlights",
       "page": 8
     },
     {
@@ -128,37 +48,7 @@
     },
     {
       "level": "H2",
-      "text": "History",
-      "page": 9
-    },
-    {
-      "level": "H2",
-      "text": "Key Attractions",
-      "page": 9
-    },
-    {
-      "level": "H2",
-      "text": "Cultural Highlights",
-      "page": 9
-    },
-    {
-      "level": "H1",
       "text": "Perpignan: A Blend of French and Catalan Cultures",
-      "page": 10
-    },
-    {
-      "level": "H2",
-      "text": "History",
-      "page": 10
-    },
-    {
-      "level": "H2",
-      "text": "Key Attractions",
-      "page": 10
-    },
-    {
-      "level": "H2",
-      "text": "Cultural Highlights",
       "page": 10
     },
     {
@@ -168,37 +58,7 @@
     },
     {
       "level": "H2",
-      "text": "History",
-      "page": 11
-    },
-    {
-      "level": "H2",
-      "text": "Key Attractions",
-      "page": 11
-    },
-    {
-      "level": "H2",
-      "text": "Cultural Highlights",
-      "page": 11
-    },
-    {
-      "level": "H1",
       "text": "Carcassonne: A Medieval Fortress",
-      "page": 12
-    },
-    {
-      "level": "H2",
-      "text": "History",
-      "page": 12
-    },
-    {
-      "level": "H2",
-      "text": "Key Attractions",
-      "page": 12
-    },
-    {
-      "level": "H2",
-      "text": "Cultural Highlights",
       "page": 12
     },
     {

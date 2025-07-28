@@ -25,8 +25,8 @@ def build_outline(
     kw = cfg.keywords
     kw_list = set(k.lower() for k in kw.list) if kw.enabled else set()
 
-    all_pages = [h.page_num1 for h in labeled_headings]
-    first_page_num = min(all_pages) if all_pages else 0
+    all_pages = [h.page_index0 for h in labeled_headings]
+    first_page_index = min(all_pages) if all_pages else 0
 
     raw_outline: List[Dict] = []
     seen_key = set()
@@ -35,7 +35,7 @@ def build_outline(
     first_h1_seen = {}
 
     for h in labeled_headings:
-        if drop_fp and h.page_num1 == first_page_num:
+        if drop_fp and h.page_index0 == first_page_index:
             continue
 
         level_int = _LEVEL2INT.get(h.level, 3)
@@ -51,17 +51,17 @@ def build_outline(
 
         # same-page duplicate H1 demotion
         if normalized_level == "H1":
-            if h.page_num1 in first_h1_seen:
+            if h.page_index0 in first_h1_seen:
                 normalized_level = "H2"
             else:
-                first_h1_seen[h.page_num1] = True
+                first_h1_seen[h.page_index0] = True
 
-        key = (h.page_num1, _normalize_text(h.text))
+        key = (h.page_index0, _normalize_text(h.text))
         if key in seen_key:
             continue
         seen_key.add(key)
 
-        if kw.enabled and kw.force_h1_if_early and (h.page_num1 <= kw.force_h1_max_page):
+        if kw.enabled and kw.force_h1_if_early and (h.page_index0 <= kw.force_h1_max_page):
             if (h.text or "").strip().lower() in kw_list:
                 normalized_level = "H1"
 
@@ -69,7 +69,7 @@ def build_outline(
             {
                 "level": normalized_level,
                 "text": h.text.strip(),
-                "page": h.page_num1,
+                "page": h.page_index0,  # ✅ Now zero-based
                 "score": h.score,
             }
         )
@@ -129,38 +129,24 @@ def _merge_trailing_short_tokens(outline: List[Dict]) -> List[Dict]:
     return merged
 
 def _should_merge(prev: Dict, item: Dict, txt: str) -> bool:
-    # word length constraint
     words = txt.split()
     if len(words) == 0 or len(words) > 2:
         return False
 
-    # never merge if it looks like a numbered header (e.g., "2.1", "1", "3)")
     if _looks_numbered(txt):
         return False
 
-    # prevent merging something that "looks like a heading"
     if _looks_heading_like(txt):
         return False
 
-    # Allow if the previous text ends with a connector
     if prev["text"].rstrip().endswith((':', '-', '—')):
         return True
 
-    # Otherwise require scores to be very close (likely same visual line broken)
     prev_sc = prev.get("score", 0)
     cur_sc = item.get("score", 0)
-    if abs(prev_sc - cur_sc) <= 1:
-        return True
-
-    return False
+    return abs(prev_sc - cur_sc) <= 1
 
 def _looks_heading_like(text: str) -> bool:
-    """
-    A simplistic heuristic: looks like a heading if
-    - contains >= 3 alphabetic letters and
-    - at least one word starts with uppercase (TitleCase-like),
-    - or it's all uppercase and at least 2 letters long
-    """
     alpha = [c for c in text if c.isalpha()]
     if len(alpha) >= 3:
         words = text.split()

@@ -1,13 +1,13 @@
 {
-  "title": "Instructions:",
+  "title": "Baked Ziti",
   "outline": [
     {
-      "level": "H1",
+      "level": "H2",
       "text": "Peking Duck",
       "page": 0
     },
     {
-      "level": "H2",
+      "level": "H1",
       "text": "Ingredients:",
       "page": 0
     },
@@ -53,7 +53,7 @@
     },
     {
       "level": "H2",
-      "text": "Ramen",
+      "text": "Serve warm.",
       "page": 1
     },
     {
@@ -102,11 +102,6 @@
       "page": 3
     },
     {
-      "level": "H1",
-      "text": "2 cloves garlic, minced",
-      "page": 3
-    },
-    {
       "level": "H2",
       "text": "Salt and pepper to taste",
       "page": 3
@@ -138,11 +133,6 @@
     },
     {
       "level": "H2",
-      "text": "2 cloves garlic, minced",
-      "page": 4
-    },
-    {
-      "level": "H2",
       "text": "Salt and pepper to taste",
       "page": 4
     },
@@ -164,11 +154,6 @@
     {
       "level": "H2",
       "text": "Ingredients:",
-      "page": 5
-    },
-    {
-      "level": "H2",
-      "text": "Salt and pepper to taste",
       "page": 5
     },
     {
@@ -207,11 +192,6 @@
       "page": 6
     },
     {
-      "level": "H3",
-      "text": "2 cloves garlic, minced",
-      "page": 6
-    },
-    {
       "level": "H2",
       "text": "Chopped parsley for garnish",
       "page": 6
@@ -220,11 +200,6 @@
       "level": "H2",
       "text": "Pulled Pork Sandwiches",
       "page": 6
-    },
-    {
-      "level": "H2",
-      "text": "Salt and pepper to taste",
-      "page": 7
     },
     {
       "level": "H2",
@@ -247,8 +222,8 @@
       "page": 7
     },
     {
-      "level": "H3",
-      "text": "2 cloves garlic, minced",
+      "level": "H2",
+      "text": "Salt and pepper to taste",
       "page": 7
     },
     {

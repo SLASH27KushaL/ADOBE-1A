@@ -75,11 +75,21 @@ def open_document(pdf_path: Path) -> fitz.Document:
 
 
 def get_toc(doc: fitz.Document) -> List[Tuple[int, str, int]]:
+    """
+    Returns a zero-based TOC: (level, title, page_index)
+    Built-in TOC entries are 1-based, so we subtract 1 (clamp to 0).
+    """
+    raw = []
     try:
-        return doc.get_toc() or []
+        raw = doc.get_toc() or []
     except Exception as e:
         log.warning("Unable to read TOC: %s", e)
-        return []
+    # convert 1-based pages to 0-based
+    toc_zero: List[Tuple[int, str, int]] = []
+    for level, title, page in raw:
+        idx = page - 1 if isinstance(page, int) else 0
+        toc_zero.append((level, title, max(0, idx)))
+    return toc_zero
 
 
 def get_pages_info(doc: fitz.Document) -> List[PageInfo]:
@@ -90,19 +100,28 @@ def get_pages_info(doc: fitz.Document) -> List[PageInfo]:
     return infos
 
 
-def get_page_number_map(doc: fitz.Document, fallback_offset: int = 0) -> List[int]:
+def get_page_number_map(doc: fitz.Document) -> List[int]:
+    """
+    Returns a list of 0-based page numbers.
+    - If the PDF has exactly one page, always returns [0].
+    - Otherwise:
+        • Numeric page labels ("1", "2", ...) are converted to 0-based.
+        • Unlabeled pages fall back to their raw 0-based indices.
+    """
+    if len(doc) == 1:
+        return [0]
+
     nums: List[int] = []
     for i, page in enumerate(doc):
         try:
-            label = page.get_label()
-            if label is not None:
-                stripped = label.strip()
-                if stripped.isdigit():
-                    nums.append(int(stripped))
-                    continue
+            label = page.get_label() or ""
+            stripped = label.strip()
+            if stripped.isdigit():
+                nums.append(int(stripped) - 1)
+                continue
         except Exception:
             pass
-        nums.append(i + 1 + fallback_offset)
+        nums.append(i)
     return nums
 
 
@@ -113,11 +132,9 @@ def iter_page_lines(doc: fitz.Document, page_index: int) -> Iterator[Line]:
     for block in text_dict.get("blocks", []):
         if block.get("type", 0) != 0:
             continue
-
         for l in block.get("lines", []):
             spans_raw = l.get("spans", [])
             spans: List[Span] = []
-
             for s in spans_raw:
                 text = s.get("text", "") or ""
                 size = float(s.get("size", 0.0))
@@ -126,7 +143,6 @@ def iter_page_lines(doc: fitz.Document, page_index: int) -> Iterator[Line]:
                 bbox = tuple(s.get("bbox", (0.0, 0.0, 0.0, 0.0)))
                 is_bold = is_bold_span(font, flags)
                 spans.append(Span(text=text, size=size, font=font, flags=flags, bbox=bbox, is_bold=is_bold))
-
             if spans:
                 x0 = min(s.bbox[0] for s in spans)
                 y0 = min(s.bbox[1] for s in spans)
@@ -145,9 +161,7 @@ def infer_body_font_profile(
     size_weights: Dict[float, int] = defaultdict(int)
     font_weights: Dict[str, int] = defaultdict(int)
     all_sizes: List[float] = []
-
     pages_to_scan = min(len(doc), max(1, sample_pages))
-
     for page_idx in range(pages_to_scan):
         for _, line in [(page_idx, l) for l in iter_page_lines(doc, page_idx)]:
             for span in line.spans:
@@ -157,10 +171,8 @@ def infer_body_font_profile(
                     font_weights[span.font] += w
                 if w > 0:
                     all_sizes.extend([span.size] * w)
-
     if not size_weights:
         return BodyFontProfile(size=12.0, font=None)
-
     if use_median_font_size and all_sizes:
         try:
             body_size = float(statistics.median(all_sizes))
@@ -168,19 +180,34 @@ def infer_body_font_profile(
             body_size = max(size_weights.items(), key=lambda kv: kv[1])[0]
     else:
         body_size = max(size_weights.items(), key=lambda kv: kv[1])[0]
-
     body_font = None
     if font_weights:
         body_font = max(font_weights.items(), key=lambda kv: kv[1])[0]
-
     return BodyFontProfile(size=body_size, font=body_font)
 
 
 def is_bold_span(font_name: str, flags: int) -> bool:
     fname_lower = (font_name or "").lower()
-    if any(t in fname_lower for t in ("bold", "black", "heavy", "semibold", "demibold")):
-        return True
-    return False
+    return any(t in fname_lower for t in ("bold", "black", "heavy", "semibold", "demibold"))
+
+
+def fallback_to_ocr(pdf_path: Path) -> List[Tuple[int, str]]:
+    """
+    OCR fallback: returns a list of (page_index, text) tuples.
+    Enforces zero-based indexing, and for single-page PDFs always returns [(0, text)].
+    """
+    doc = fitz.open(pdf_path)
+    # Single-page override
+    if len(doc) == 1:
+        page = doc[0]
+        text = page.get_text("text")  # or your OCR pipeline here
+        return [(0, text)]
+
+    results: List[Tuple[int, str]] = []
+    for i, page in enumerate(doc):
+        text = page.get_text("text")  # replace with actual OCR if needed
+        results.append((i, text))
+    return results
 
 
 __all__ = [
@@ -195,4 +222,5 @@ __all__ = [
     "iter_page_lines",
     "infer_body_font_profile",
     "is_bold_span",
+    "fallback_to_ocr",
 ]

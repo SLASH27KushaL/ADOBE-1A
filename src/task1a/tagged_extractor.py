@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 class TaggedHeading:
     level: str          # "H1" | "H2" | "H3"
     text: str
-    page: int           # 1-based
+    page: int           # ✅ 0-based page index
 
 
 def extract(doc: fitz.Document,
@@ -43,12 +43,11 @@ def extract(doc: fitz.Document,
     for lvl, title, page in toc:
         text = (title or "").strip()
         if _core_len(text) < min_chars:
-            # skip noise / ultra-short items
-            continue
+            continue  # skip noise
 
         h = _map_level_to_h(lvl)
-        page_num = max(1, int(page))  # TOC already 1-based, just sanitize
-        headings.append(TaggedHeading(level=h, text=text, page=page_num))
+        page_index0 = max(0, int(page) - 1)  # ✅ convert to 0-based safely
+        headings.append(TaggedHeading(level=h, text=text, page=page_index0))
 
     if not headings:
         return None

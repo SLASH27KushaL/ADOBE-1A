@@ -1,39 +1,19 @@
 {
-  "title": "RFP: R",
+  "title": "r Proposal",
   "outline": [
     {
-      "level": "H3",
+      "level": "H2",
       "text": "Ontario’s Libraries",
       "page": 0
     },
     {
-      "level": "H3",
-      "text": "Working T ogether",
+      "level": "H2",
+      "text": "Working T",
       "page": 0
     },
     {
       "level": "H1",
-      "text": "RFP: R",
-      "page": 0
-    },
-    {
-      "level": "H2",
-      "text": "RFP: Re equest f quest f",
-      "page": 0
-    },
-    {
-      "level": "H2",
       "text": "r Proposal",
-      "page": 0
-    },
-    {
-      "level": "H2",
-      "text": "oposal",
-      "page": 0
-    },
-    {
-      "level": "H2",
-      "text": "Digital Library",
       "page": 0
     },
     {
@@ -47,18 +27,8 @@
       "page": 1
     },
     {
-      "level": "H3",
+      "level": "H2",
       "text": "Prosperity Strategy",
-      "page": 1
-    },
-    {
-      "level": "H3",
-      "text": "Summary",
-      "page": 1
-    },
-    {
-      "level": "H3",
-      "text": "Timeline:",
       "page": 1
     },
     {
@@ -89,11 +59,6 @@
     {
       "level": "H3",
       "text": "Local points of entry:",
-      "page": 4
-    },
-    {
-      "level": "H3",
-      "text": "Access:",
       "page": 4
     },
     {
@@ -165,11 +130,6 @@
       "level": "H2",
       "text": "Appendix A:  ODL Envisioned Phases & Funding",
       "page": 8
-    },
-    {
-      "level": "H3",
-      "text": "Funding Source",
-      "page": 9
     },
     {
       "level": "H2",
@@ -299,16 +259,6 @@
     {
       "level": "H3",
       "text": "ODL’s Envisioned Electronic Resources",
-      "page": 13
-    },
-    {
-      "level": "H3",
-      "text": "1. Reference Resources",
-      "page": 13
-    },
-    {
-      "level": "H3",
-      "text": "2. Subject Guides",
       "page": 13
     }
   ]

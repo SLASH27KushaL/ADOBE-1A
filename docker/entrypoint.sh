@@ -12,3 +12,4 @@ python -m src.run \
   --config "$CONFIG_PATH" \
   --log-level "$LOG_LEVEL" \
   "$@"
+  
